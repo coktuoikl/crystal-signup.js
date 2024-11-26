@@ -1,0 +1,118 @@
+import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.js';
+
+let scene, camera, renderer, cubes = [];
+let mouseX = 0, mouseY = 0;
+
+function init() {
+  const container = document.getElementById('crystal-signup-container');
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+  renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('backgroundCanvas'), alpha: true });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  
+  // Create crystal cubes
+  for (let i = 0; i < 50; i++) {
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const material = new THREE.MeshPhongMaterial({ 
+      color: new THREE.Color(Math.random(), Math.random(), Math.random()),
+      specular: 0xffffff, 
+      shininess: 100 
+    });
+    const cube = new THREE.Mesh(geometry, material);
+    cube.position.set(
+      Math.random() * 20 - 10,
+      Math.random() * 20 - 10,
+      Math.random() * 20 - 10
+    );
+    scene.add(cube);
+    cubes.push(cube);
+  }
+  
+  // Add lights
+  const light = new THREE.PointLight(0xffffff, 1, 100);
+  light.position.set(0, 0, 10);
+  scene.add(light);
+  
+  camera.position.z = 15;
+  
+  container.addEventListener('mousemove', onMouseMove);
+  window.addEventListener('resize', onWindowResize);
+  
+  animate();
+}
+
+function onMouseMove(event) {
+  const container = document.getElementById('crystal-signup-container');
+  const rect = container.getBoundingClientRect();
+  mouseX = ((event.clientX - rect.left) / container.clientWidth) * 2 - 1;
+  mouseY = -((event.clientY - rect.top) / container.clientHeight) * 2 + 1;
+}
+
+function onWindowResize() {
+  const container = document.getElementById('crystal-signup-container');
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  cubes.forEach((cube, index) => {
+    // Rotate based on mouse position
+    cube.rotation.x += mouseY * 0.02;
+    cube.rotation.y += mouseX * 0.02;
+    
+    // Add some independent motion
+    cube.rotation.x += Math.sin(Date.now() * 0.001 + index) * 0.01;
+    cube.rotation.y += Math.cos(Date.now() * 0.001 + index) * 0.01;
+    
+    // Slowly change color
+    cube.material.color.setHSL(
+      (Math.sin(Date.now() * 0.001 + index) + 1) / 2,
+      0.5,
+      0.5
+    );
+  });
+  renderer.render(scene, camera);
+}
+
+init();
+
+// Form validation
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('signupForm');
+  const username = document.getElementById('username');
+  const email = document.getElementById('email');
+  const password = document.getElementById('password');
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    let isValid = true;
+
+    if (username.value.length < 3) {
+      document.getElementById('usernameError').textContent = 'Username must be at least 3 characters long';
+      isValid = false;
+    } else {
+      document.getElementById('usernameError').textContent = '';
+    }
+
+    if (!/\S+@\S+\.\S+/.test(email.value)) {
+      document.getElementById('emailError').textContent = 'Please enter a valid email address';
+      isValid = false;
+    } else {
+      document.getElementById('emailError').textContent = '';
+    }
+
+    if (password.value.length < 6) {
+      document.getElementById('passwordError').textContent = 'Password must be at least 6 characters long';
+      isValid = false;
+    } else {
+      document.getElementById('passwordError').textContent = '';
+    }
+
+    if (isValid) {
+      alert('Sign up successful!');
+      form.reset();
+    }
+  });
+});
